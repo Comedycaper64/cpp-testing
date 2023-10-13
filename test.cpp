@@ -71,6 +71,15 @@
 
 #include "raylib.h"
 
+struct AnimData
+{
+    Rectangle rect;
+    Vector2 pos;
+    int frame;
+    float updateTime;
+    float runningTime;
+};
+
 int main()
 {
     const int windowWidth{800};
@@ -78,31 +87,53 @@ int main()
     InitWindow(windowWidth, windowHeight, "Runner Game");
 
     Texture2D nebulaTex = LoadTexture("textures/12_nebula_spritesheet.png");
-    Rectangle nebulaRect{0.0, 0.0, nebulaTex.width / 8, nebulaTex.height / 8};
-    Vector2 nebulaPos{windowWidth, windowHeight - nebulaRect.height};
+
+    AnimData nebulaData{
+        {0.0, 0.0, nebulaTex.width / 8.0, nebulaTex.height / 8.0},
+        {windowWidth, windowHeight - nebulaTex.height / 8.0},
+        0,
+        1.0 / 12.0,
+        0};
+
+    int nebulaNum = 5;
+
+    AnimData nebulae[nebulaNum]{};
+
+    for (int i = 0; i < nebulaNum; i++)
+    {
+        nebulae[i].rect = {0.0, 0.0, nebulaTex.width / (float)8, nebulaTex.height / (float)8};
+        nebulae[i].pos = {windowWidth + float(i * 300), windowHeight - nebulaTex.height / (float)8.0};
+        nebulae[i].frame = 0;
+        nebulae[i].runningTime = 0;
+        nebulae[i].updateTime = 1.0 / 16.0;
+    }
+
+    // Rectangle nebulaRect{0.0, 0.0, nebulaTex.width / 8, nebulaTex.height / 8};
+    // Vector2 nebulaPos{windowWidth, windowHeight - nebulaRect.height};
     int nebulaVelocity(-200);
 
     Texture2D characterTexture = LoadTexture("textures/scarfy.png");
-    Rectangle characterRect;
-    characterRect.width = characterTexture.width / 6;
-    characterRect.height = characterTexture.height;
-    characterRect.x = 0;
-    characterRect.y = 0;
+    AnimData characterData{{0.0, 0.0, characterTexture.width / 6.0, characterTexture.height}, {windowWidth / 2 - characterData.rect.width / 2, windowHeight - characterData.rect.height}, 0, 1.0 / 8.0, 0};
+    // Rectangle characterRect;
+    // characterRect.width = characterTexture.width / 6;
+    // characterRect.height = characterTexture.height;
+    // characterRect.x = 0;
+    // characterRect.y = 0;
 
-    Vector2 characterPos;
-    characterPos.x = windowWidth / 2 - characterRect.width / 2;
-    characterPos.y = windowHeight - characterRect.height;
+    // Vector2 characterPos;
+    // characterPos.x = windowWidth / 2 - characterRect.width / 2;
+    // characterPos.y = windowHeight - characterRect.height;
 
     const int gravity = 1000;
     const int jumpVelocity = -750;
 
-    const float animUpdateTime = 0.1;
-    float animTimeTracker{0};
-    int frame{0};
+    // const float animUpdateTime = 0.1;
+    // float animTimeTracker{0};
+    // int frame{0};
 
-    const float nebulaUpdateTime{1.0 / 12.0};
-    float nebulaRunningTime{0};
-    int nebulaFrame{0};
+    // const float nebulaUpdateTime{1.0 / 12.0};
+    // float nebulaRunningTime{0};
+    // int nebulaFrame{0};
 
     // int posY{windowHeight - rectHeight};
     int velocity{0};
@@ -115,10 +146,10 @@ int main()
 
         float deltaTime = GetFrameTime();
 
-        if (characterPos.y >= windowHeight - characterRect.height)
+        if (characterData.pos.y >= windowHeight - characterData.rect.height)
         {
             velocity = 0;
-            animTimeTracker += deltaTime;
+            characterData.runningTime += deltaTime;
             if (IsKeyDown(KEY_SPACE))
             {
                 velocity = jumpVelocity;
@@ -129,38 +160,38 @@ int main()
             velocity += gravity * deltaTime;
         }
 
-        nebulaPos.x += nebulaVelocity * deltaTime;
+        nebulaData.pos.x += nebulaVelocity * deltaTime;
 
-        characterPos.y += velocity * deltaTime;
+        characterData.pos.y += velocity * deltaTime;
 
-        if (animTimeTracker > animUpdateTime)
+        if (characterData.runningTime > characterData.updateTime)
         {
-            characterRect.x = frame * characterRect.width;
-            frame++;
-            if (frame > 5)
+            characterData.rect.x = characterData.frame * characterData.rect.width;
+            characterData.frame++;
+            if (characterData.frame > 5)
             {
-                frame = 0;
+                characterData.frame = 0;
             }
 
-            animTimeTracker = 0.0;
+            characterData.runningTime = 0.0;
         }
 
-        nebulaRunningTime += deltaTime;
-        if (nebulaRunningTime > nebulaUpdateTime)
+        nebulaData.runningTime += deltaTime;
+        if (nebulaData.runningTime > nebulaData.updateTime)
         {
-            nebulaRect.x = nebulaFrame * nebulaRect.width;
-            nebulaFrame++;
-            if (nebulaFrame > 7)
+            nebulaData.rect.x = nebulaData.frame * nebulaData.rect.width;
+            nebulaData.frame++;
+            if (nebulaData.frame > 7)
             {
-                nebulaFrame = 0;
+                nebulaData.frame = 0;
             }
 
-            nebulaRunningTime = 0.0;
+            nebulaData.runningTime = 0.0;
         }
 
-        DrawTextureRec(nebulaTex, nebulaRect, nebulaPos, WHITE);
+        DrawTextureRec(nebulaTex, nebulaData.rect, nebulaData.pos, WHITE);
 
-        DrawTextureRec(characterTexture, characterRect, characterPos, WHITE);
+        DrawTextureRec(characterTexture, characterData.rect, characterData.pos, WHITE);
 
         EndDrawing();
     }
