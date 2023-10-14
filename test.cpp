@@ -88,12 +88,12 @@ int main()
 
     Texture2D nebulaTex = LoadTexture("textures/12_nebula_spritesheet.png");
 
-    AnimData nebulaData{
-        {0.0, 0.0, nebulaTex.width / 8.0, nebulaTex.height / 8.0},
-        {windowWidth, windowHeight - nebulaTex.height / 8.0},
-        0,
-        1.0 / 12.0,
-        0};
+    // AnimData nebulaData{
+    //     {0.0, 0.0, nebulaTex.width / 8.0, nebulaTex.height / 8.0},
+    //     {windowWidth, windowHeight - nebulaTex.height / 8.0},
+    //     0,
+    //     1.0 / 12.0,
+    //     0};
 
     int nebulaNum = 5;
 
@@ -138,13 +138,27 @@ int main()
     // int posY{windowHeight - rectHeight};
     int velocity{0};
 
+    Texture2D background = LoadTexture("textures/far-buildings.png");
+    float bgX{};
+
     SetTargetFPS(60);
     while (!WindowShouldClose())
     {
         BeginDrawing();
         ClearBackground(WHITE);
 
+        Vector2 bg1Pos{bgX, 0.0};
+        Vector2 bg2Pos{bgX + background.width * 2, 0.0};
+        DrawTextureEx(background, bg1Pos, 0.0, 2.0, WHITE);
+        DrawTextureEx(background, bg2Pos, 0.0, 2.0, WHITE);
+
         float deltaTime = GetFrameTime();
+
+        bgX -= 20 * deltaTime;
+        if (bgX < -background.width * 2)
+        {
+            bgX = 0;
+        }
 
         if (characterData.pos.y >= windowHeight - characterData.rect.height)
         {
@@ -160,7 +174,10 @@ int main()
             velocity += gravity * deltaTime;
         }
 
-        nebulaData.pos.x += nebulaVelocity * deltaTime;
+        for (int i = 0; i < nebulaNum; i++)
+        {
+            nebulae[i].pos.x += nebulaVelocity * deltaTime;
+        }
 
         characterData.pos.y += velocity * deltaTime;
 
@@ -176,26 +193,32 @@ int main()
             characterData.runningTime = 0.0;
         }
 
-        nebulaData.runningTime += deltaTime;
-        if (nebulaData.runningTime > nebulaData.updateTime)
+        for (int i = 0; i < nebulaNum; i++)
         {
-            nebulaData.rect.x = nebulaData.frame * nebulaData.rect.width;
-            nebulaData.frame++;
-            if (nebulaData.frame > 7)
+            nebulae[i].runningTime += deltaTime;
+            if (nebulae[i].runningTime > nebulae[i].updateTime)
             {
-                nebulaData.frame = 0;
+                nebulae[i].rect.x = nebulae[i].frame * nebulae[i].rect.width;
+                nebulae[i].frame++;
+                if (nebulae[i].frame > 7)
+                {
+                    nebulae[i].frame = 0;
+                }
+
+                nebulae[i].runningTime = 0.0;
             }
-
-            nebulaData.runningTime = 0.0;
         }
-
-        DrawTextureRec(nebulaTex, nebulaData.rect, nebulaData.pos, WHITE);
+        for (int i = 0; i < nebulaNum; i++)
+        {
+            DrawTextureRec(nebulaTex, nebulae[i].rect, nebulae[i].pos, WHITE);
+        }
 
         DrawTextureRec(characterTexture, characterData.rect, characterData.pos, WHITE);
 
         EndDrawing();
     }
     UnloadTexture(characterTexture);
+    UnloadTexture(background);
     UnloadTexture(nebulaTex);
     CloseWindow();
 }
